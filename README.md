@@ -4,6 +4,44 @@ Basit ve anlaşılabilir kodlarla hızlıca api noktaları tasarlamak için geli
 
 BT API, yalnızca MySQL veritabanı ile çalışmaktadır. Hızlı bir başlangıç için projenize klonlayıp app/config.js dosyasını kendi ayarlarınıza göre düzenleyebilirsiniz.
 
+Örnekleri görmek için projeyi indirip examples dizinine gidebilirsiniz.
+
+# Doküman
+
+Bu framework'ü kullanmak için config.js dosyanızı yapılandırın, modules dizinine bir js dosyası ekleyin ve yeni bir route tanımlayın hepsi bu kadar. Artık bir API noktanız var!
+
+## Ayar
+
+app/config.js dosyasını kendi bilgilerinizle düzenleyebilirsiniz.
+
+```javascript
+const config = {
+    database: {
+        host: "localhost",
+        user: "root",
+        password: "root",
+        database: "test",
+        port: "3306",
+        dateStrings: true,
+        charset: 'utf8_turkish_ci',
+        typeCast: function castField( field, useDefaultTypeCasting ) {
+            if ( ( field.type === "BIT" ) && ( field.length === 1 ) ) {
+                var bytes = field.buffer();
+                return( bytes[ 0 ] === 1 );
+            }
+            return( useDefaultTypeCasting() );
+        }
+    },
+    service: { 
+        port: 8080 // Servisin çalışacağı port numarası
+    },
+    access_token: {
+        secret: 'de197ca7b8387913da0f5164785b27f3', // Token bilgileri
+        life: 2592000
+    }
+};
+```
+
 BT API, modüller ve rotalar olmak üzere 2 sistem üzerine çalışmaktadır.
 
 1. Modüller; birden fazla rotayı barındırarak rotada kullanılacak parametrelerin kurallarını tutar.
@@ -160,3 +198,10 @@ Gelen HTTP isteğine vereceği yanıtı belirler. Gelen parametreler kurallardan
 
 ### 2.3 Settings
 
+Verinin oluşturulması için gerekli bilgileri alır. "sql", "insert", "update", "request" ve "response" elemanlarını alabilir.
+
+1. **sql:** Adından da anlaşılabileceği gibi içine SQL kodu yazılır. Bu eleman string veya callback fonksiyonu değerleri alabilir. String olarak kullanıyorsak SQL kodumuzda ihtiyacımız olan parametreleri, parametre kurallarına tanımladıktan sonra burada süslü parantez içinde kullanabiliriz. Örneğin id değerine göre kullanıcının bilgilerini getirmek istiyorsak "id" parametresini parametre kurallarına tanıttıktan sonra şöyle bir sql kodu yazmamız gerekir; "SELECT * FROM users WHERE id = {id}". Eğer callback fonksiyonu olarak kullanılacaksa fonksiyonun ilk parametresine gelen HTTP isteğinden tüm parametreler nesne olarak verilir ve callback fonksiyonundan SQL kodu döndürülmesi beklenir.
+2. **insert:** Bu eleman uzun insert kodlarınızı kısaltmak için oluşturulmuştur. "table" ve "params" olmak üzere 2 eleman alır. "table" elemanına insert yapılacak tablo adı string olarak yazılır. "params" elemanına ise insert yapılacak verilerin isimleri dizi olarak yazılır. Hatırlamakta fayda var "params" elemanında kullanılacak parametre isimleri parametre kuralların da tanımlamak zorunludur :)
+3. **update:** Bu elemanda update kodlarınızı kısaltmak için oluşturulmuştur. "table", "params" ve "where" olmak üzere 3 eleman alır. insert elemanıyla aynı işlemi yapar tek fark bu elemanda "where" elemanı kullanılabilir. "where" elemanına hangi koşulda update olacağını string olarak belirtiriz. 
+4. **request:** HTTP isteğiyle gelen parametreleri işlemek için kullanılır. Değer olarak callback fonksiyonu alır, fonksiyonun ilk parametresine istekle gelen tüm parametreler nesne olarak verilir. Fonksiyonun geri döndürdüğü parametreler SQL'de kullanılacak parametrelere gönderilir bu sebeple parametreleri return ile döndürmek önemlidir.
+5. **response:** HTTP isteğine yanıt olarak gidecek olan verilerimizi burada işleriz. Değer olarak callback fonksiyonu alır, fonksiyonun ilk parametresine SQL kodunun sonuçları gönderilir. Fonksiyonda return yapılmazsa HTTP yanıtından herhangi bir veri gönderilmez.
